@@ -15,6 +15,8 @@ The display shows key data, including:
 - The fan's theoretical operational percentage
 - The user-defined target temperature
 
+![Initial test](/images/intial_test.png)
+
 The fan speed is controlled using a basic **fan curve**, which adjusts the fan's operation based on the current temperature compared to the desired temperature. For now, the target temperature can be manually set by pressing the onboard button, which cycles the setpoint between **60°F and 90°F**. This allows the user to fine-tune the desired room temperature.
 
 ## Future Enhancements
