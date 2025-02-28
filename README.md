@@ -9,6 +9,7 @@ Introducing our advanced zonal HVAC control system - designed to optimize comfor
 
 ## Initial Implementation
 This code represents our initial design implementation, featuring a single sensor connected to the **Renesas RA0E1** board and a display screen. We utilized the **Renesas e2 studio** to code the software necessary for this design. 
+Majority of the work is done in [`hal_entry.c`](inital_test/src/hal_entry.c)
 
 The display shows key data, including:
 - Current temperature and humidity readings
