@@ -1,0 +1,147 @@
+****************************************************************
+USE This File to Copy-Paste code in Class as we work on the lab
+****************************************************************
+
+------------------------
+Screen Enumeration
+------------------------
+  SHOW_TEMP_HUM,
+  SHOW_COUNT,
+  SHOW_MESSAGE,
+  SET_TEMP,
+  SET_HUM,
+  SET_TIME,
+  BIG_TEMP,
+
+
+
+------------------------
+Switch Screens()
+------------------------
+  case SHOW_TEMP_HUM:
+    ssd1306_Clear();
+    ssd1306_SetCursor (0,0);
+    ssd1306_WriteString ("Ambient", Font_11x18);
+    ssd1306_SetCursor (0, 20);
+    ssd1306_WriteString ("DegF: ", Font_11x18);
+    ssd1306_SetCursor (0, 40);
+    ssd1306_WriteString ("Hum: ", Font_11x18);
+    tempInF.xPos = 55;
+    tempInF.yPos = 20;
+    humidity.xPos = 55;
+    humidity.yPos = 40;
+    break;
+  case SHOW_COUNT:
+    ssd1306_Clear();
+    ssd1306_SetCursor (0,0);
+    ssd1306_WriteString ("Counter", Font_11x18);
+    ssd1306_SetCursor (0, 20);
+    ssd1306_WriteString ("Value: ", Font_11x18);
+    counter.xPos = 65;
+    counter.yPos = 20;
+    break;
+  case SHOW_MESSAGE:
+    ssd1306_Clear();
+    ssd1306_SetCursor (0,0);
+    ssd1306_WriteString ("Message", Font_11x18);
+    displayMessage.xPos = 0;
+    displayMessage.yPos = 30;
+    break;
+  case SET_TEMP:
+    ssd1306_Clear();
+    ssd1306_SetCursor (0,0);
+    ssd1306_WriteString ("Set Temp", Font_11x18);
+    ssd1306_SetCursor (0, 20);
+    ssd1306_WriteString ("DegF: ", Font_11x18);
+    ssd1306_SetCursor (0, 40);
+    ssd1306_WriteString ("Set: ", Font_11x18);
+    tempInF.xPos = 55;
+    tempInF.yPos = 20;
+    setTempF.xPos = 55;
+    setTempF.yPos = 40;
+    break;
+  case BIG_TEMP:
+    ssd1306_Clear();
+    ssd1306_SetCursor (0,0);
+    ssd1306_WriteString ("Big Temp", Font_11x18);
+    tempInF.xPos = 20;
+    tempInF.yPos = 25;
+    break;
+
+    
+------------------------
+UpdateScreenValues()
+------------------------
+
+  case SHOW_TEMP_HUM:
+    ssd1306_SetCursor (tempInF.xPos, tempInF.yPos);
+    if (tempInF.valid) {
+      sprintf(displayString, tempInF.format, tempInF.data);
+      ssd1306_WriteString(displayString, Font_11x18);
+    }
+    else 
+      ssd1306_WriteString(tempInF.invalidMsg, Font_11x18);
+    
+    ssd1306_SetCursor (humidity.xPos, humidity.yPos);
+    if (humidity.valid) {
+      sprintf(displayString, humidity.format, humidity.data);
+      ssd1306_WriteString(displayString, Font_11x18);
+    }
+    else
+      ssd1306_WriteString(humidity.invalidMsg, Font_11x18);
+    break;
+  case SHOW_COUNT:
+    ssd1306_SetCursor (counter.xPos, counter.yPos);
+    if (counter.valid) {
+      sprintf(displayString, counter.format, counter.data);
+      ssd1306_WriteString(displayString, Font_11x18);
+    }
+    else
+      ssd1306_WriteString(counter.invalidMsg, Font_11x18);
+    break;
+  case SHOW_MESSAGE:
+        ssd1306_SetCursor (displayMessage.xPos, displayMessage.yPos);
+    if (displayMessage.valid) {
+      ssd1306_WriteString(displayMessage.data, Font_11x18);
+    }
+    else
+      ssd1306_WriteString(displayMessage.invalidMsg, Font_11x18);
+    break;
+  case SET_TEMP:
+    ssd1306_SetCursor (tempInF.xPos, tempInF.yPos);
+    if (tempInF.valid) {
+      sprintf(displayString, tempInF.format, tempInF.data);
+      ssd1306_WriteString(displayString, Font_11x18);
+    }
+    else 
+      ssd1306_WriteString(tempInF.invalidMsg, Font_11x18);
+    
+    ssd1306_SetCursor (setTempF.xPos, setTempF.yPos);
+    if (setTempF.valid) {
+      sprintf(displayString, setTempF.format, setTempF.data);
+      ssd1306_WriteString(displayString, Font_11x18);
+    }
+    else
+      ssd1306_WriteString(setTempF.invalidMsg, Font_11x18);
+    break;
+  case SET_HUM:
+    break;
+  case SET_TIME:
+    break;
+  case BIG_TEMP:
+    ssd1306_SetCursor (tempInF.xPos, tempInF.yPos);
+    if (tempInF.valid) {
+      sprintf(displayString, tempInF.format, tempInF.data);
+      ssd1306_WriteString(displayString, Font_16x26);
+    }
+    else
+      ssd1306_WriteString(tempInF.invalidMsg, Font_11x18);
+    break;
+
+
+
+
+
+
+    
+    
