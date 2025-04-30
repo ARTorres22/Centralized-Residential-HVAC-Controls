@@ -10,22 +10,107 @@
 #include "Serial_user.h"
 #include "..\Modules\SSD1306\OLED\Inc\ssd1306.h"
 #include "common_utils.h"
+#include "hal_data.h"
+#include "bsp_pin_cfg.h"
+
 
 // Prototypes
 void R_BSP_WarmStart(bsp_warm_start_event_t event);
-static volatile i2c_master_event_t i2c_event = I2C_MASTER_EVENT_ABORTED;
+void i2c_master_callback(i2c_master_callback_args_t *p_args);
+
+
 volatile uint8_t i2cBusy = false;
 fsp_err_t err     = FSP_SUCCESS;
 volatile uint8_t x = 0;
 #define OLED_DISPLAY_I2C_BUS_ADDRESS 0x3C
+
+// Sensor
+static volatile i2c_master_event_t i2c_event = I2C_MASTER_EVENT_ABORTED;
+#define SENSOR_I2C_BUS_ADDRESS 0x44
+uint8_t sensorRegisters[6];
+const uint8_t cmdRead[2] = {0x24,0x16}; // read temp/hum in Low repeatibility and no clock stretching
+//const uint8_t cmdRead[2] = {0x24,0x0B}; // read temp/hum in Med repeatibility and no clock stretching
+uint8_t getTempHum = false;
+uint8_t getTempHumState = 0;
+uint8_t currentTempF = 40;
+uint8_t currentHum = 10;
+uint16_t desiredTempF = 70;
+uint8_t fan = 50;
+
+#define BASE_FAN_SPEED 20
+#define PROPORTIONAL_GAIN 2
+
+// EEProm
+#define EEPROM_I2C_BUS_ADDRESS 0x50
+uint8_t readEEPROM = false;
+uint8_t writeEEPROM = false;
+uint8_t readEEpromValues[8] = {0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA};
+uint8_t writeEEpromValues[8];
+uint8_t readWriteStartingRegister[2];
+uint8_t eepromReadWriteState = 0;
+uint8_t noBytestoRW = 4;
+
+//variables to extend scheduler
+#define TEN_SEC_SEED 10
+uint8_t tenSecCounter = TEN_SEC_SEED;
+
+#define INITIAL_FLASH_RATE 40
+volatile uint16_t flashDelaySeed = INITIAL_FLASH_RATE;
+uint16_t flashDelay = INITIAL_FLASH_RATE;
+uint8_t flashEnable = true;
+
+uint8_t cmdArray[1];
+
+uint8_t zoneNumber = 0;
 
 char str1[16];
 char str2[16];
 char str3[16];
 char str4[16];
 
-extern uint16_t tempValue;
 uint16_t temp;
+
+
+float Kp = 25.0f;    // Proportional gain (adjustable)
+float Ki = 0.1f;     // Integral gain (adjustable)
+float Kd = 5.0f;     // Derivative gain (adjustable)
+
+float zone;
+float target;
+float seconds;
+float vent;
+
+float prev_error = 0.0f;
+float integral = 0.0f;
+
+
+float clamp(float value, float min, float max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
+float update_vent(float T_room, float T_target, float dt_seconds) {
+    float error = T_room - T_target;
+    integral += error * dt_seconds;
+    float derivative = (error - prev_error) / dt_seconds;
+    prev_error = error;
+
+    float output = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+    // Clamp between 0% and 100%
+    return clamp(output, 0.0f, 100.0f);
+}
+
+uint8_t float_to_uint8(float value) {
+    if (value < 0.0f) return 0;
+    if (value > 255.0f) return 255;
+    return (uint8_t)(value + 0.5f); // optional rounding
+}
+
+static uint8_t prevRegisters[6] = {0};  // Holds previous values
+
+uint8_t y = 0;
 
 /*******************************************************************************************************************//**
  * @brief  Blinky example application
@@ -71,12 +156,26 @@ void hal_entry (void)
 
      err = R_IICA_MASTER_Open(&g_iica_master0_ctrl, &g_iica_master0_cfg);
 
+
+
+
+     // preset some things for read and write EEPROM
+     readWriteStartingRegister[0] = 0x00;
+     readWriteStartingRegister[1] = 0x04;
+     writeEEpromValues[0] =  readWriteStartingRegister[0];
+     writeEEpromValues[1] =  readWriteStartingRegister[1];
+     writeEEpromValues[2] = 1;
+     writeEEpromValues[3] = 2;
+     writeEEpromValues[4] = 3;
+     writeEEpromValues[5] = 4;
+
      g_iica_master0_ctrl.slave = OLED_DISPLAY_I2C_BUS_ADDRESS;
 
      SSD1306_Init();
      SSD1306_Clear ();
      SSD1306_GotoXY(10,20);
      SSD1306_Puts("Booting...", &Font_11x18, SSD1306_COLOR_WHITE);
+     SSD1306_UpdateScreen();
 
 // Main Loop Start
     while (1)
@@ -87,7 +186,31 @@ void hal_entry (void)
         //---------------------------------
         // 10mS Tasks
         if (ten_mS_Flag) {
-            ten_mS_Flag = false;
+          ten_mS_Flag = false;
+
+          if (readEEPROM == true) {
+              switch(eepromReadWriteState++) {
+                  case 0:
+                      g_iica_master0_ctrl.slave = EEPROM_I2C_BUS_ADDRESS;
+                      err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, (uint8_t *)&readWriteStartingRegister[0], 2, true);
+                      break;
+                  case 1:
+                      err = R_IICA_MASTER_Read(&g_iica_master0_ctrl, &readEEpromValues[0], noBytestoRW, false);
+                      break;
+                  case 2:
+                      readEEPROM = false;
+                      eepromReadWriteState = 0;
+                      break;
+              }
+          }
+
+          if (writeEEPROM == true) {
+              g_iica_master0_ctrl.slave = EEPROM_I2C_BUS_ADDRESS;
+              err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, (uint8_t *)&writeEEpromValues[0], noBytestoRW + 2, false);
+              writeEEPROM = false;
+          }
+
+
 
         }  // end of 10mS Tasks
         //---------------------------------
@@ -96,7 +219,160 @@ void hal_entry (void)
         //---------------------------------
         // 25mS Tasks
         if (twentyfive_mS_Flag) {
-            twentyfive_mS_Flag = false;
+          twentyfive_mS_Flag = false;
+
+          getTempHum = true;
+
+          if (flashEnable == true) {
+              if (--flashDelay == 0) {
+                  flashDelay = flashDelaySeed;
+//                  R_BSP_PinAccessEnable();
+//
+//                  /* Update all board LEDs */
+//                  for (uint32_t i = 0; i < leds.led_count; i++)
+//                  {
+//                      /* Get pin to toggle */
+//                      uint32_t pin = leds.p_leds[i];
+//
+//                      /* Write to this pin */
+//                      R_BSP_PinWrite((bsp_io_port_pin_t) pin, pin_level);
+//                  }
+//
+//                  /* Protect PFS registers */
+//                  R_BSP_PinAccessDisable();
+
+                  R_PORT0->PODR_b.PODR8 = pin_level;
+                  R_PORT0->PODR_b.PODR9 = pin_level;
+
+
+                  /* Toggle level for next write */
+                  if (BSP_IO_LEVEL_LOW == pin_level)
+                  {
+                      pin_level = BSP_IO_LEVEL_HIGH;
+                  }
+                  else
+                  {
+                      pin_level = BSP_IO_LEVEL_LOW;
+                  }
+              }
+          }
+
+          if (getTempHum == true) {
+              switch (getTempHumState++) {
+                  case 0:
+                      g_iica_master0_ctrl.slave = SENSOR_I2C_BUS_ADDRESS;
+                      err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, (uint8_t *)&cmdRead[0], 2, false);
+                      break;
+                  case 1:
+                      err = R_IICA_MASTER_Read(&g_iica_master0_ctrl, &sensorRegisters[0], 6, false);
+                      break;
+                  case 2:
+                      currentTempF = (uint8_t)(
+                              (uint32_t)(
+                              (uint32_t)(
+                              (uint32_t)(((uint32_t)sensorRegisters[0] << 8) + sensorRegisters[1])
+                              * 315)
+                              / 0xFFFF)
+                              - 49);
+
+                      currentHum = (uint8_t)(
+                              (uint32_t)(
+                              (uint32_t)(
+                              (uint32_t)(((uint32_t)sensorRegisters[3] << 8) + sensorRegisters[4])
+                              *100)
+                              /0xFFFF));
+
+                      getTempHum = false;
+                      getTempHumState = 0;
+
+                      g_iica_master0_ctrl.slave = OLED_DISPLAY_I2C_BUS_ADDRESS;
+                      err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, cmdArray, 1, false);
+
+//                      uint8_t temp_diff = desiredTempF - currentTempF;
+//                      fan = BASE_FAN_SPEED + (PROPORTIONAL_GAIN * temp_diff);
+//
+//                      // Ensure fan percentage is within bounds (0 - 100)
+//                      if (fan > 100) fan = 100;
+//                      if (fan < 0) fan = 0;
+
+                      desiredTempF = temp;
+
+                      zone = (float)currentTempF;
+                      target = (float)desiredTempF;
+                      seconds = 0.025f;
+
+                      vent = update_vent(zone, target, seconds);
+
+                      fan = float_to_uint8(vent);
+
+                      sprintf(str1, "%d", currentTempF);  // Convert to string
+                      sprintf(str2, "%d", zoneNumber);
+                      sprintf(str4, "%u", desiredTempF);
+                      sprintf(str3, "%u%%", fan);
+
+
+
+
+                      bool allMatch = true;
+
+
+                      for (int i = 0; i < 6; ++i) {
+                          if (sensorRegisters[i] != prevRegisters[i]) {
+                              allMatch = false;
+                              y = 0;
+                              break;
+                          }
+                      }
+
+                      if (allMatch) {
+                          y++;
+                          if(y == 10){
+                              SSD1306_Fill(SSD1306_COLOR_BLACK);
+                              SSD1306_GotoXY(0,5);
+                              SSD1306_Puts("No", &Font_7x10, SSD1306_COLOR_WHITE);
+                              SSD1306_GotoXY(10,20);
+                              SSD1306_Puts("Sensor", &Font_11x18, SSD1306_COLOR_WHITE);
+                              SSD1306_UpdateScreen();
+                          }
+                      }
+                      else{
+                          SSD1306_Fill(SSD1306_COLOR_BLACK);
+                          SSD1306_GotoXY(0,5);
+                          SSD1306_Puts("Temp", &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(10,20);
+                          SSD1306_Puts(str1, &Font_11x18, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(70,5);
+                          SSD1306_Puts("Zone", &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(80,20);
+                          SSD1306_Puts(str2, &Font_11x18, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(0,40);
+                          SSD1306_Puts("Fan", &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(10,50);
+                          SSD1306_Puts(str3, &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(70,40);
+                          SSD1306_Puts("D Temp", &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_GotoXY(80,50);
+                          SSD1306_Puts(str4, &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_UpdateScreen();
+                      }
+
+                      // Update prevRegisters for next check
+                      for (int i = 0; i < 6; ++i) {
+                          prevRegisters[i] = sensorRegisters[i];
+                      }
+
+
+
+
+
+
+
+
+                      break;
+              }
+          }
+
+
 
         }  // end of 25mS Tasks
         //---------------------------------
@@ -132,6 +408,21 @@ void hal_entry (void)
 
             }
 
+            if (--tenSecCounter == 0) {
+                tenSecCounter = TEN_SEC_SEED;
+
+
+
+  //              g_iica_master0_ctrl.slave = SENSOR_I2C_BUS_ADDRESS;
+  //
+  //              err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, &cmdRead[0], 2, false);
+  //
+  //              for (index1 = 0; index1 < 65535; index1++) {
+  //                  delay2++;
+  //              }
+  //
+  //              err = R_IICA_MASTER_Read(&g_iica_master0_ctrl, &sensorRegisters[0], 6, false);
+            }
 
         } // end of 1Sec Tasks
         //---------------------------------
@@ -150,37 +441,13 @@ void hal_entry (void)
         if (!RxBufferEmpty()) {
             ProcessReceiveBuffer();
 
-        sprintf(str1, "%u", 0);
-        sprintf(str2, "%u", 0);
-        sprintf(str3, "%u", 0);
-         sprintf(str4, "%u", temp);
-
-         SSD1306_Fill(SSD1306_COLOR_BLACK);
-         SSD1306_GotoXY(0,5);
-         SSD1306_Puts("Temp", &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(10,20);
-         SSD1306_Puts(str1, &Font_11x18, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(70,5);
-         SSD1306_Puts("Hum", &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(80,20);
-         SSD1306_Puts(str2, &Font_11x18, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(0,40);
-         SSD1306_Puts("Fan", &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(10,50);
-         SSD1306_Puts(str3, &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(70,40);
-         SSD1306_Puts("D Temp", &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_GotoXY(80,50);
-         SSD1306_Puts(str4, &Font_7x10, SSD1306_COLOR_WHITE);
-         SSD1306_UpdateScreen();
 
 
         }
         else{
             x=0;
         }
-        // end Every time through the loop
-        //---------------------------------
+
 
     }
 }

@@ -42,7 +42,7 @@
 #include <string.h>
 #include <stdio.h>
 
-uint16_t tempValue;
+uint16_t tempValue = 70;
 
 // packet management
 uint8_t packetBuffer[PACKET_BUFFER_LENGTH];
@@ -56,6 +56,7 @@ uint8_t escapeDetected = false;
 
 extern uint8_t rxBuffer[RX_BUFFER_SIZE];
 extern uint8_t temp;
+extern uint8_t zoneNumber;
 
 // Process Variables from other modules/code
 bsp_io_level_t pin_level2 = BSP_IO_LEVEL_LOW;
@@ -144,6 +145,13 @@ uint8_t ProcessPacket(void)
     case 'S':
         errorCode = ConvertASCII2UINT16((char*)&packetBuffer[PARAMETER_START_LOCATION], 5, '\n', &tempValue);
         temp = tempValue;
+        break;
+
+
+    case 'z':     // s = adjust the flash speed
+    case 'Z':
+        errorCode = ConvertASCII2UINT16((char*)&packetBuffer[PARAMETER_START_LOCATION], 5, '\n', &tempValue);
+        zoneNumber = tempValue;
         break;
 
     }

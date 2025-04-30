@@ -4,16 +4,28 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../src/hal_entry.c 
+../src/adc_hal.c \
+../src/dtc_hal.c \
+../src/elc_hal.c \
+../src/hal_entry.c \
+../src/tau_hal.c 
 
 CREF += \
 RA0_TokenNet_Device-0.cref 
 
 C_DEPS += \
-./src/hal_entry.d 
+./src/adc_hal.d \
+./src/dtc_hal.d \
+./src/elc_hal.d \
+./src/hal_entry.d \
+./src/tau_hal.d 
 
 OBJS += \
-./src/hal_entry.o 
+./src/adc_hal.o \
+./src/dtc_hal.o \
+./src/elc_hal.o \
+./src/hal_entry.o \
+./src/tau_hal.o 
 
 MAP += \
 RA0_TokenNet_Device-0.map 
