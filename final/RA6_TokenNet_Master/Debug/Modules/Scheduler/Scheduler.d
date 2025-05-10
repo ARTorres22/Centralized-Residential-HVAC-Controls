@@ -1,5 +1,5 @@
 Modules/Scheduler/Scheduler.o: ..\Modules\Scheduler\Scheduler.c \
-  C:\Users\ddmga\OneDrive\workspace\RA6_TokenNet_Master\src\Project.h \
+  C:\Users\artor\OneDrive\workspace\RA6_TokenNet_Master1\src\Project.h \
   ..\Modules\Scheduler\Scheduler.h
-C:\Users\ddmga\OneDrive\workspace\RA6_TokenNet_Master\src\Project.h:
+C:\Users\artor\OneDrive\workspace\RA6_TokenNet_Master1\src\Project.h:
 ..\Modules\Scheduler\Scheduler.h:

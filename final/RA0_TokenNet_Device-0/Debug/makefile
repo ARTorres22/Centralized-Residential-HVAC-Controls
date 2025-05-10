@@ -93,31 +93,31 @@ endif
 LIBRARY_GENERATOR_OUTPUTTYPE_OUTPUTS += \
 
 OBJCOPY += \
-RA0_TokenNet_Device-0.srec \
+RA0_TokenNet_Device.srec \
 
 SECONDARY_SIZE += \
-RA0_TokenNet_Device-0.siz \
+RA0_TokenNet_Device.siz \
 
 
 # All Target
-all: RA0_TokenNet_Device-0.elf secondary-outputs
+all: RA0_TokenNet_Device.elf secondary-outputs
 
 # Tool invocations
-RA0_TokenNet_Device-0.elf: $(OBJS) $(USER_OBJS) $(LIBRARY_GENERATOR_OUTPUTTYPE_OUTPUTS) $(LINKER_SCRIPT)
-	$(file > RA0_TokenNet_Device-0.elf.in,-mcpu=cortex-m23 -mthumb -mlittle-endian -Oz -ffunction-sections -fdata-sections -fno-strict-aliasing -fmessage-length=0 -funsigned-char -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Waggregate-return -Wno-parentheses-equality -Wfloat-equal -g3 -o "RA0_TokenNet_Device-0.elf" $(OBJS) $(USER_OBJS) -T "fsp.lld" -L"C:\\Users\\ddmga\\OneDrive\\workspace\\RA0_TokenNet_Device-0/script" -L"C:\\Users\\ddmga\\OneDrive\\workspace\\RA0_TokenNet_Device-0\\Debug" -Wl,-Map=RA0_TokenNet_Device-0.map -Wl,--start-group -lcrt0 -lc++abi  -Wl,--end-group -Wl,--gc-sections -Wl,--cref -Wl,--icf=none)
-	@echo Building target: $@ && clang  --target=arm-none-eabi @"RA0_TokenNet_Device-0.elf.in"> RA0_TokenNet_Device-0.cref
+RA0_TokenNet_Device.elf: $(OBJS) $(USER_OBJS) $(LIBRARY_GENERATOR_OUTPUTTYPE_OUTPUTS) $(LINKER_SCRIPT)
+	$(file > RA0_TokenNet_Device.elf.in,-mcpu=cortex-m23 -mthumb -mlittle-endian -Oz -ffunction-sections -fdata-sections -fno-strict-aliasing -fmessage-length=0 -funsigned-char -Wunused -Wuninitialized -Wall -Wextra -Wmissing-declarations -Wconversion -Wpointer-arith -Wshadow -Waggregate-return -Wno-parentheses-equality -Wfloat-equal -g3 -o "RA0_TokenNet_Device.elf" $(OBJS) $(USER_OBJS) -T "fsp.lld" -L"C:\\Users\\artor\\OneDrive\\workspace\\RA0_TokenNet_Device-0/script" -L"C:\\Users\\artor\\OneDrive\\workspace\\RA0_TokenNet_Device-0\\Debug" -Wl,-Map=RA0_TokenNet_Device.map -Wl,--start-group -lcrt0 -lc++abi  -Wl,--end-group -Wl,--gc-sections -Wl,--cref -Wl,--icf=none)
+	@echo Building target: $@ && clang  --target=arm-none-eabi @"RA0_TokenNet_Device.elf.in"> RA0_TokenNet_Device.cref
 : 
 	arm-none-eabi-libgen  --select-lib=newlib --compiler-options=-mcpu=cortex-m23,-mthumb,-mlittle-endian,-Oz,-ffunction-sections,-fdata-sections,-fno-strict-aliasing,-fmessage-length=0,-funsigned-char --assembler-options=-mcpu=cortex-m23,-mthumb,-mlittle-endian -o
-RA0_TokenNet_Device-0.srec: RA0_TokenNet_Device-0.elf
-	llvm-objcopy "RA0_TokenNet_Device-0.elf" -O srec  "RA0_TokenNet_Device-0.srec"
-RA0_TokenNet_Device-0.siz: RA0_TokenNet_Device-0.elf
-	llvm-size --format=berkeley "RA0_TokenNet_Device-0.elf"
+RA0_TokenNet_Device.srec: RA0_TokenNet_Device.elf
+	llvm-objcopy "RA0_TokenNet_Device.elf" -O srec  "RA0_TokenNet_Device.srec"
+RA0_TokenNet_Device.siz: RA0_TokenNet_Device.elf
+	llvm-size --format=berkeley "RA0_TokenNet_Device.elf"
 # Other Targets
 clean:
 	-$(file > clean_file.tmp,  $(JMP_DEPS)  $(FSY_DEPS)  $(C_UPPER_DEPS)  $(SECONDARY_SIZE)  $(SRC_UPPER_DEPS)  $(P_UPPER_DEPS)  $(S_DEPS)  $(PP_UPPER_DEPS)  $(P_DEPS)  $(FSY_UPPER_DEPS)  $(CREF)  $(C_DEPS)  $(SRC_DEPS)  $(OBJCOPY)  $(JMP_UPPER_DEPS)  $(PP_DEPS)  $(SX_DEPS)  $(ASM_UPPER_DEPS)  $(OBJS)  $(SX_UPPER_DEPS)  $(ASM_DEPS)  $(LIBRARY_GENERATOR_OUTPUTTYPE_OUTPUTS)  $(MAP)  $(S_UPPER_DEPS) )
 	-@ xargs -P 2 -s 32000 -t -a clean_file.tmp $(RM)
 	-@$(RM) clean_file.tmp
-	-$(RM)  RA0_TokenNet_Device-0.elf
+	-$(RM)  RA0_TokenNet_Device.elf
 	-@echo ' '
 
 secondary-outputs: $(OBJCOPY) $(SECONDARY_SIZE)

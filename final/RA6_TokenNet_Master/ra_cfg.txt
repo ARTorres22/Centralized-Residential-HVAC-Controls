@@ -120,8 +120,8 @@ FSP Configuration
       P005 164 - - - - Disabled - - "ADC1: AN01; ACMPHS4: IVCMP; IRQ0: IRQ10" - None - - 
       P006 163 - - - - Disabled - - "ADC1: AN02; ACMPHS5: IVCMP; IRQ0: IRQ11" - None - - 
       P007 162 - - - - Disabled - - "ADC1: AN07; ADC1: PGAVSS0" - None - - 
-      P008 161 IRQ0_IRQ12 - - IRQ12-DS "IRQ mode" - None "ADC0: AN03; IRQ0: IRQ12" - IO - - 
-      P009 160 IRQ0_IRQ13 - - IRQ13-DS "IRQ mode" - None "ADC0: AN04; IRQ0: IRQ13" - IO - - 
+      P008 161 IRQ0_IRQ12 - - IRQ12-DS "IRQ mode" - "input pull-up" "ADC0: AN03; IRQ0: IRQ12" - IO - - 
+      P009 160 IRQ0_IRQ13 - - IRQ13-DS "IRQ mode" - "input pull-up" "ADC0: AN04; IRQ0: IRQ13" - IO - - 
       P010 159 - - - - Disabled - - "ADC1: AN03; IRQ0: IRQ14" - None - - 
       P014 152 ADC0_AN05 - - - "Analog mode" - - "ADC0: AN05; ADC1: AN05; ACMPHS0: IVREF; ACMPHS1: IVREF; ACMPHS2: IVREF; ACMPHS3: IVREF; ACMPHS4: IVREF; ACMPHS5: IVREF; DAC120: DA" - IO - - 
       P015 151 - - - - Disabled - - "ADC0: AN06; ADC1: AN06; ACMPHS0: IVCMP; ACMPHS1: IVCMP; ACMPHS2: IVCMP; ACMPHS3: IVCMP; ACMPHS4: IVCMP; ACMPHS5: IVCMP; DAC121: DA; IRQ0: IRQ13" - None - - 

@@ -42,7 +42,7 @@
 #include <string.h>
 #include <stdio.h>
 
-uint16_t tempValue = 70;
+uint16_t tempValue;
 
 // packet management
 uint8_t packetBuffer[PACKET_BUFFER_LENGTH];

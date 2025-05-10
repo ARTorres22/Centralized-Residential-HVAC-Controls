@@ -13,10 +13,18 @@
 #include "hal_data.h"
 #include "bsp_pin_cfg.h"
 
+#define SERVO_PIN1    BSP_IO_PORT_01_PIN_03
+#define SERVO_PIN2    BSP_IO_PORT_01_PIN_09
+#define MIN_PULSE_US 2000   // 1ms = full left
+#define MAX_PULSE_US 1000   // 2ms = full right
+
+volatile uint16_t pulse_width_us = 1000; // Default: center (1.5ms)
 
 // Prototypes
 void R_BSP_WarmStart(bsp_warm_start_event_t event);
 void i2c_master_callback(i2c_master_callback_args_t *p_args);
+void set_servo_angle(float angle_deg);
+void send_servo_pulse(uint16_t pulse_us);
 
 
 volatile uint8_t i2cBusy = false;
@@ -35,7 +43,9 @@ uint8_t getTempHumState = 0;
 uint8_t currentTempF = 40;
 uint8_t currentHum = 10;
 uint16_t desiredTempF = 70;
+uint16_t tempcheck = 70;
 uint8_t fan = 50;
+uint8_t five_seconds = 0;
 
 #define BASE_FAN_SPEED 20
 #define PROPORTIONAL_GAIN 2
@@ -68,10 +78,10 @@ char str2[16];
 char str3[16];
 char str4[16];
 
-uint16_t temp;
+uint16_t temp = 70;
 
 
-float Kp = 25.0f;    // Proportional gain (adjustable)
+float Kp = 10.0f;    // Proportional gain (adjustable)
 float Ki = 0.1f;     // Integral gain (adjustable)
 float Kd = 5.0f;     // Derivative gain (adjustable)
 
@@ -111,6 +121,8 @@ uint8_t float_to_uint8(float value) {
 static uint8_t prevRegisters[6] = {0};  // Holds previous values
 
 uint8_t y = 0;
+uint8_t z = 0;
+
 
 /*******************************************************************************************************************//**
  * @brief  Blinky example application
@@ -177,6 +189,15 @@ void hal_entry (void)
      SSD1306_Puts("Booting...", &Font_11x18, SSD1306_COLOR_WHITE);
      SSD1306_UpdateScreen();
 
+     /* Open IOPORT (GPIO) */
+     //R_IOPORT_Open(&g_ioport_ctrl, &g_bsp_pin_cfg);
+
+     /* Start the timer */
+     R_TAU_Open(&g_timer0_ctrl, &g_timer0_cfg);
+     R_TAU_Start(&g_timer0_ctrl);
+
+     set_servo_angle(90.0f);
+
 // Main Loop Start
     while (1)
     {
@@ -210,7 +231,13 @@ void hal_entry (void)
               writeEEPROM = false;
           }
 
-
+          if(z == 1){
+              send_servo_pulse(pulse_width_us);
+              z=0;
+          }
+          else{
+              z++;
+          }
 
         }  // end of 10mS Tasks
         //---------------------------------
@@ -288,6 +315,7 @@ void hal_entry (void)
                       g_iica_master0_ctrl.slave = OLED_DISPLAY_I2C_BUS_ADDRESS;
                       err = R_IICA_MASTER_Write(&g_iica_master0_ctrl, cmdArray, 1, false);
 
+
 //                      uint8_t temp_diff = desiredTempF - currentTempF;
 //                      fan = BASE_FAN_SPEED + (PROPORTIONAL_GAIN * temp_diff);
 //
@@ -297,17 +325,18 @@ void hal_entry (void)
 
                       desiredTempF = temp;
 
-                      zone = (float)currentTempF;
-                      target = (float)desiredTempF;
-                      seconds = 0.025f;
 
-                      vent = update_vent(zone, target, seconds);
 
                       fan = float_to_uint8(vent);
 
+
+                      if(desiredTempF != tempcheck){
+                          tempcheck = desiredTempF;
+                      }
+
                       sprintf(str1, "%d", currentTempF);  // Convert to string
-                      sprintf(str2, "%d", zoneNumber);
-                      sprintf(str4, "%u", desiredTempF);
+                      sprintf(str2, "%d", currentHum);
+                      sprintf(str4, "%d", tempcheck);
                       sprintf(str3, "%u%%", fan);
 
 
@@ -327,22 +356,24 @@ void hal_entry (void)
                       if (allMatch) {
                           y++;
                           if(y == 10){
+
                               SSD1306_Fill(SSD1306_COLOR_BLACK);
                               SSD1306_GotoXY(0,5);
-                              SSD1306_Puts("No", &Font_7x10, SSD1306_COLOR_WHITE);
+                              SSD1306_Puts("Desired Temp", &Font_7x10, SSD1306_COLOR_WHITE);
                               SSD1306_GotoXY(10,20);
-                              SSD1306_Puts("Sensor", &Font_11x18, SSD1306_COLOR_WHITE);
+                              SSD1306_Puts(str4, &Font_16x26, SSD1306_COLOR_WHITE);
                               SSD1306_UpdateScreen();
                           }
                       }
                       else{
+
                           SSD1306_Fill(SSD1306_COLOR_BLACK);
                           SSD1306_GotoXY(0,5);
                           SSD1306_Puts("Temp", &Font_7x10, SSD1306_COLOR_WHITE);
                           SSD1306_GotoXY(10,20);
                           SSD1306_Puts(str1, &Font_11x18, SSD1306_COLOR_WHITE);
                           SSD1306_GotoXY(70,5);
-                          SSD1306_Puts("Zone", &Font_7x10, SSD1306_COLOR_WHITE);
+                          SSD1306_Puts("Hum", &Font_7x10, SSD1306_COLOR_WHITE);
                           SSD1306_GotoXY(80,20);
                           SSD1306_Puts(str2, &Font_11x18, SSD1306_COLOR_WHITE);
                           SSD1306_GotoXY(0,40);
@@ -424,6 +455,18 @@ void hal_entry (void)
   //              err = R_IICA_MASTER_Read(&g_iica_master0_ctrl, &sensorRegisters[0], 6, false);
             }
 
+            if (five_seconds == 4){
+                zone = (float)currentTempF;
+                target = (float)desiredTempF;
+                seconds = 5.0f;
+
+                vent = update_vent(zone, target, seconds);
+                set_servo_angle(vent);
+                five_seconds = 0;
+            }
+            else{
+                five_seconds++;
+            }
         } // end of 1Sec Tasks
         //---------------------------------
 
@@ -494,3 +537,33 @@ void i2c_master_callback(i2c_master_callback_args_t *p_args)
     }
 }
 
+void timer0_callback(timer_callback_args_t *p_args)
+{
+    /* Start the PWM pulse */
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN1, BSP_IO_LEVEL_HIGH);
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN2, BSP_IO_LEVEL_HIGH);
+
+    /* Delay for pulse width (in microseconds) */
+    R_BSP_SoftwareDelay(pulse_width_us, BSP_DELAY_UNITS_MICROSECONDS);
+
+    /* End the PWM pulse */
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN1, BSP_IO_LEVEL_LOW);
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN2, BSP_IO_LEVEL_LOW);
+}
+
+void set_servo_angle(float angle_deg)
+{
+    if (angle_deg < 0.0f) angle_deg = 0.0f;
+    if (angle_deg > 180.0f) angle_deg = 180.0f;
+
+    pulse_width_us = (uint16_t)(MIN_PULSE_US + (angle_deg / 180.0f) * (MAX_PULSE_US - MIN_PULSE_US));
+}
+
+void send_servo_pulse(uint16_t pulse_us)
+{
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN1, BSP_IO_LEVEL_HIGH);
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN2, BSP_IO_LEVEL_HIGH);
+    R_BSP_SoftwareDelay(pulse_us, BSP_DELAY_UNITS_MICROSECONDS);
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN1, BSP_IO_LEVEL_LOW);
+    R_IOPORT_PinWrite(&g_ioport_ctrl, SERVO_PIN2, BSP_IO_LEVEL_LOW);
+}

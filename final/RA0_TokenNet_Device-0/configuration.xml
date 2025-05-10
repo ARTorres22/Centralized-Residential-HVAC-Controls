@@ -396,13 +396,12 @@
       <configSetting altId="p102.input" configurationId="p102"/>
       <configSetting altId="p102.gpio_mode.gpio_mode_in" configurationId="p102.gpio_mode"/>
       <configSetting altId="p102.gpio_pupd.gpio_pupd_ip_up" configurationId="p102.gpio_pupd"/>
-      <configSetting altId="p103.input" configurationId="p103"/>
-      <configSetting altId="p103.gpio_mode.gpio_mode_in" configurationId="p103.gpio_mode"/>
-      <configSetting altId="p103.gpio_pupd.gpio_pupd_ip_up" configurationId="p103.gpio_pupd"/>
+      <configSetting altId="p103.output.low" configurationId="p103"/>
+      <configSetting altId="p103.gpio_mode.gpio_mode_out.low" configurationId="p103.gpio_mode"/>
       <configSetting altId="p108.jtag_fslash_swd.swdio" configurationId="p108"/>
       <configSetting altId="p108.gpio_mode.gpio_mode_peripheral" configurationId="p108.gpio_mode"/>
-      <configSetting altId="p109.input" configurationId="p109"/>
-      <configSetting altId="p109.gpio_mode.gpio_mode_in" configurationId="p109.gpio_mode"/>
+      <configSetting altId="p109.output.low" configurationId="p109"/>
+      <configSetting altId="p109.gpio_mode.gpio_mode_out.low" configurationId="p109.gpio_mode"/>
       <configSetting altId="p110.input" configurationId="p110"/>
       <configSetting altId="p110.gpio_mode.gpio_mode_in" configurationId="p110.gpio_mode"/>
       <configSetting altId="p112.input" configurationId="p112"/>

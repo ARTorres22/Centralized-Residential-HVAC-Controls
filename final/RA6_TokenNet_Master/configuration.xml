@@ -311,9 +311,11 @@
       <configSetting altId="p008.irq0.irq12" configurationId="p008"/>
       <configSetting altId="p008.gpio_irq.gpio_irq_enabled" configurationId="p008.gpio_irq"/>
       <configSetting altId="p008.gpio_mode.gpio_mode_irq" configurationId="p008.gpio_mode"/>
+      <configSetting altId="p008.gpio_pupd.gpio_pupd_ip_up" configurationId="p008.gpio_pupd"/>
       <configSetting altId="p009.irq0.irq13" configurationId="p009"/>
       <configSetting altId="p009.gpio_irq.gpio_irq_enabled" configurationId="p009.gpio_irq"/>
       <configSetting altId="p009.gpio_mode.gpio_mode_irq" configurationId="p009.gpio_mode"/>
+      <configSetting altId="p009.gpio_pupd.gpio_pupd_ip_up" configurationId="p009.gpio_pupd"/>
       <configSetting altId="p014.asel" configurationId="p014"/>
       <configSetting altId="p014.gpio_mode.gpio_mode_an" configurationId="p014.gpio_mode"/>
       <configSetting altId="p100.output.low" configurationId="p100"/>

@@ -26,7 +26,7 @@
     <booleanAttribute key="com.renesas.cdt.core.startServer" value="true"/>
     <stringAttribute key="com.renesas.cdt.core.targetDevice" value="R7FA0E107"/>
     <booleanAttribute key="com.renesas.cdt.core.useRemoteTarget" value="true"/>
-    <stringAttribute key="com.renesas.cdt.debug.ioview.dsf.registerSelection0" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;selectedRegisterList ioFilePath=&quot;C:\Users\VincentDAgostino\.eclipse\com.renesas.platform_1435879475\DebugComp\RA\IoFiles\R7FA0E107.svd&quot;/&gt;&#13;&#10;"/>
+    <stringAttribute key="com.renesas.cdt.debug.ioview.dsf.registerSelection0" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;selectedRegisterList ioFilePath=&quot;C:\Users\artor\.eclipse\com.renesas.platform_15818172\DebugComp\RA\IoFiles\R7FA0E107.svd&quot;/&gt;&#13;&#10;"/>
     <stringAttribute key="com.renesas.cdt.launch.dsf.IO_MAP" value="${support_area_loc}"/>
     <booleanAttribute key="com.renesas.cdt.launch.dsf.USE_DEFAULT_IO_MAP" value="true"/>
     <listAttribute key="com.renesas.cdt.launch.dsf.downloadImages">
@@ -100,7 +100,7 @@
     <intAttribute key="org.eclipse.cdt.debug.gdbjtag.core.delay" value="3"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doHalt" value="false"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doReset" value="false"/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value="C:\Users\ddmga\OneDrive\workspace\RA0_TokenNet_Device\Debug\RA0_TokenNet_Device.elf"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageFileName" value="C:\Users\artor\OneDrive\workspace\RA0_TokenNet_Device-0\Debug\RA0_TokenNet_Device.elf"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.imageOffset" value=""/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value=""/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.loadImage" value="true"/>
@@ -111,7 +111,7 @@
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setResume" value="false"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="true"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="main"/>
-    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsFileName" value="C:\Users\ddmga\OneDrive\workspace\RA0_TokenNet_Device\Debug\RA0_TokenNet_Device.elf"/>
+    <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsFileName" value="C:\Users\artor\OneDrive\workspace\RA0_TokenNet_Device-0\Debug\RA0_TokenNet_Device.elf"/>
     <stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.symbolsOffset" value=""/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useFileForImage" value="false"/>
     <booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.useFileForSymbols" value="false"/>

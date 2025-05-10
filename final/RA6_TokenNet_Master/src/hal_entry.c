@@ -19,6 +19,9 @@ char msg[15];
 
 void R_BSP_WarmStart(bsp_warm_start_event_t event);
 
+int button_pressed1 = 0;
+int button_pressed2 = 0;
+
 extern bsp_leds_t g_bsp_leds;
 
 
@@ -70,6 +73,18 @@ void hal_entry (void)
     SendString(PROJ_REV,strlen(PROJ_REV), StripZeros, NoAddCRLF);
 
 
+//    sprintf(msg, "$01Z%d\n", 1);
+//    SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
+//
+//    sprintf(msg, "$02Z%d\n", 2);
+//    SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
+//
+//    sprintf(msg, "$03Z%d\n", 3);
+//    SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
+//
+//    sprintf(msg, "$04Z%d\n", 4);
+//    SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
+
     //------------------------------------------------------
     // Code Start
 
@@ -120,11 +135,19 @@ void hal_entry (void)
               sprintf(msg, "$01S%d\n", my_integer);
 
 
+              sprintf(msg, "$01S%d\n", my_integer);
               SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
               // send LED toggle command to node 1
               // SendString("$02L3\n", strlen("$L013\n"), StripZeros, NoAddCRLF);  // send LED toggle command to node 2
 
+              sprintf(msg, "$02S%d\n", my_integer);
+              SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
 
+              sprintf(msg, "$03S%d\n", my_integer);
+              SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
+
+              sprintf(msg, "$04S%d\n", my_integer);
+              SendString(msg, strlen(msg), StripZeros, NoAddCRLF);
 
 
               // This is the NON-Token version- start here
@@ -164,18 +187,60 @@ void hal_entry (void)
                 ProcessReceiveBuffer();
             }
 
-            if (x == 10000000){
-                if(my_integer >= 90){
-                    my_integer = 60;
+//            if (x == 10000000){
+//                if(my_integer >= 90){
+//                    my_integer = 60;
+//                }
+//                else{
+//                    my_integer++;
+//                }
+//                x=0;
+//            }
+//            else{
+//                x++;
+//            }
+
+            static bsp_io_level_t last_pin_state1 = BSP_IO_LEVEL_HIGH;
+
+            bsp_io_level_t pin_state1;
+            R_IOPORT_PinRead(&g_ioport_ctrl, BSP_IO_PORT_00_PIN_08, &pin_state1);
+
+            if (last_pin_state1 == BSP_IO_LEVEL_HIGH && pin_state1 == BSP_IO_LEVEL_LOW)
+            {
+                R_BSP_SoftwareDelay(50, BSP_DELAY_UNITS_MILLISECONDS);  // 50ms debounce
+                R_IOPORT_PinRead(&g_ioport_ctrl, BSP_IO_PORT_00_PIN_08, &pin_state1);
+                button_pressed1 = 1;
+                if (pin_state1 == BSP_IO_LEVEL_LOW)  // still pressed after debounce
+                {
+                    if (my_integer < 90)
+                    {
+                        my_integer++;
+                    }
                 }
-                else{
-                    my_integer++;
+            }
+            last_pin_state1 = pin_state1;
+            button_pressed1 = 0;
+
+            static bsp_io_level_t last_pin_state2 = BSP_IO_LEVEL_HIGH;
+
+            bsp_io_level_t pin_state2;
+            R_IOPORT_PinRead(&g_ioport_ctrl, BSP_IO_PORT_00_PIN_09, &pin_state2);
+
+            if (last_pin_state2 == BSP_IO_LEVEL_HIGH && pin_state2 == BSP_IO_LEVEL_LOW)
+            {
+                R_BSP_SoftwareDelay(50, BSP_DELAY_UNITS_MILLISECONDS);  // 50ms debounce
+                R_IOPORT_PinRead(&g_ioport_ctrl, BSP_IO_PORT_00_PIN_09, &pin_state2);
+                button_pressed2 = 1;
+                if (pin_state2 == BSP_IO_LEVEL_LOW)  // still pressed after debounce
+                {
+                    if (my_integer > 60)
+                    {
+                        my_integer--;
+                    }
                 }
-                x=0;
             }
-            else{
-                x++;
-            }
+            last_pin_state2 = pin_state2;
+            button_pressed2 = 0;
 
             // end Every time through the loop
             //--------------------------------
